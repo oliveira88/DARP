@@ -379,3 +379,4 @@ MigrationBackup/
 *.exe
 *.out
 *.app
+.vscode
