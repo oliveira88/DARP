@@ -40,12 +40,14 @@ typedef struct Solucao {
   // int idVeiculoTransportado[MAX];  // -1= nenhum, 1,2,3,4,5,6
   // int pessoasTransportadas[MAX];
   // int tempoTotalMovimento[MAX];
-  // int requisicaoAtendidaPor[MAX];
+  int requisicaoAtendidaPor[MAX];
   Veiculo veiculos[VEICULOS];
   int FO;
 } Solucao;
 
 int PESO1 = 10, PESO2 = 1;
+
+int reqVeiculo[MAX];
 
 void lerArquivo(std::string nome);
 void escreverDados(std::string nome);

@@ -1,0 +1,6 @@
+2800 1 2 3 4 5 6
+FO # veículos usados
+1 2   3
+2 2 
+id veículo # req. atendidas vetor com o id das locais atendidos
+id veículo # req. atendidas vetor com o id das locais atendidos

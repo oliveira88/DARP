@@ -4,19 +4,27 @@
 #include <memory.h>
 #include <time.h>
 
+#include <algorithm>
+#include <functional>
 #include <iostream>
+#include <map>
+#include <numeric>
+#include <random>
 #include <string>
+#include <vector>
+
 #define LENGTH(x) (sizeof(x) / sizeof(x)[0])
 
 using namespace std;
 int main() {
-  string instancia = "txt\\darp1.txt";
+  srand(unsigned(time(0)));
+  string instancia = "txt\\darp3.txt";
   lerArquivo(instancia);
   Solucao s;
   HCAleatoria(s);
-  calcularFO(s);
-  string arquivoSaida = "";
-  escreverDados(arquivoSaida);
+  // calcularFO(s);
+  // string arquivoSaida = "";
+  // escreverDados(arquivoSaida);
   // calcularFO(s);
 }
 
@@ -97,15 +105,51 @@ void simulatedAnnealing() {
 }
 
 void HCAleatoria(Solucao &s) {
-}
+  std::map<int, size_t> dCount;
+  const int range_from = 0;
+  const int range_to = veiculos;
+  std::random_device rand_dev;
+  std::mt19937 generator(rand_dev());
+  std::uniform_int_distribution<int> distr(range_from, range_to);
+  for (int i = 0; i < requisicoes; i++) {
+    s.requisicaoAtendidaPor[i] = (rand() % veiculos) + 1;
+    printf("Requisicao %d atendida por: %d\n", i + 1, s.requisicaoAtendidaPor[i]);
+  }
+  breakLine(stdout, 2);
+  for (const auto elem : s.requisicaoAtendidaPor) {
+    if (elem < 0 || elem > 100) break;
+    dCount[elem] += 1;
+  }
+  printf("################FOR NORMAL################\n");
+  for (const auto &elem : dCount) {
+    cout << "QTD " << elem.first << ": " << elem.second << "\n";
+  }
+  printf("#####################################\n");
+  // breakLine(stdout, 2);
 
-void HCGulosa(Solucao &s) {
+  // std::map<int, size_t> cCount;
+  // for (int i = 0; i < requisicoes; i++) {
+  //   s.requisicaoAtendidaPor[i] = distr(generator);
+  //   printf("Requisicao %d atendida por: %d\n", i + 1, s.requisicaoAtendidaPor[i]);
+  // }
+  // breakLine(stdout, 2);
+  // for (const auto elem : s.requisicaoAtendidaPor) {
+  //   if (elem < 0 || elem > 100) break;
+  //   cCount[elem] += 1;
+  // }
+  // printf("################FOR C++11################\n");
+  // for (const auto &elem : cCount) {
+  //   cout << "QTD " << elem.first << ": " << elem.second << "\n";
+  // }
+  // printf("#####################################\n");
 }
-
-void HCAleatoriaGulosa(Solucao &s) {}
 
 void calcularFO(Solucao &s) {
   int p1 = PESO1 * veiculos;
+  for (int i = 0; i < veiculos; i++) {
+    s.veiculos[i].FO = s.veiculos[i].distanciaPercorrida;
+  }
+
   int p2 = 0;
   for (int i = 0; i < veiculos; i++) {
   }
