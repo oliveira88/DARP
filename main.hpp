@@ -24,15 +24,17 @@ typedef struct Violacoes {
 } Violacoes;
 
 typedef struct Veiculo {
-  int id;
-  int requicoesAtendidas;
-  int assentosUtilizados;
-  int duracaoRota;
-  int tempoViagem;
-  int tempoEspera;
-  int distanciaPercorrida;
-  int FO;
+  int id = -1;
+  int requicoesAtendidas = 0;
+  int assentosUtilizados = 0;
+  int duracaoRota = 0;
+  int tempoViagem = 0;
+  int tempoEspera = 0;
+  int distanciaPercorrida = 0;
+  int FO = 0;
   Violacoes violacoes;
+  int rotasEmbarque[MAX];
+  int rotasDesembarque[MAX];
   // TODO: sequência de locais que formam a rota do veículo.
 } Veiculo;
 
@@ -41,7 +43,7 @@ typedef struct Solucao {
   // int pessoasTransportadas[MAX];
   // int tempoTotalMovimento[MAX];
   int requisicaoAtendidaPor[MAX];
-  Veiculo veiculos[VEICULOS];
+  Veiculo veiculos[VEICULOS] = {0};
   int FO;
 } Solucao;
 

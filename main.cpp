@@ -18,7 +18,7 @@
 using namespace std;
 int main() {
   srand(unsigned(time(0)));
-  string instancia = "txt\\darp3.txt";
+  string instancia = "txt\\darp1.txt";
   lerArquivo(instancia);
   Solucao s;
   HCAleatoria(s);
@@ -103,31 +103,65 @@ void simulatedAnnealing() {
 
   fim = clock();
 }
-
+void printVetor(std::vector<int> vetor) {
+  for (int i = 0; i < vetor.size(); i++) {
+    printf("VETOR[%d]\t=\t%d\n", i, vetor[i]);
+  }
+  printf("\n\n");
+}
 void HCAleatoria(Solucao &s) {
   std::map<int, size_t> dCount;
-  const int range_from = 0;
-  const int range_to = veiculos;
-  std::random_device rand_dev;
-  std::mt19937 generator(rand_dev());
-  std::uniform_int_distribution<int> distr(range_from, range_to);
+  std::vector<int> arrayLocais;  // Array para embaralhar com os locais e distribuir entre os veiculos
   for (int i = 0; i < requisicoes; i++) {
-    s.requisicaoAtendidaPor[i] = (rand() % veiculos) + 1;
-    printf("Requisicao %d atendida por: %d\n", i + 1, s.requisicaoAtendidaPor[i]);
+    arrayLocais.push_back(1 + 2 * i);  // Posições impares = embarque
   }
+
+  auto rng = std::default_random_engine{};
+  std::shuffle(std::begin(arrayLocais), std::end(arrayLocais), rng);
+  Veiculo _veiculos[VEICULOS];
+  Veiculo v = Veiculo();
+  int idVeiculo = 0;
+  int a = requisicoes / veiculos;
+  for (int i = 0; i < requisicoes / veiculos; i++) {
+    _veiculos[idVeiculo].id = idVeiculo;
+    _veiculos[idVeiculo].rotasEmbarque[i] = arrayLocais[i];
+
+    printVetor(arrayLocais);
+    idVeiculo++;
+    arrayLocais.erase(arrayLocais.begin() + i);  // Remove do array
+    std::shuffle(std::begin(arrayLocais), std::end(arrayLocais), rng);
+  }
+  // for (int i = 0; i < veiculos; i++) {
+  //   for (int j = 0; j < requisicoes; j++) {
+  //     printf("veiculo[%d].rotas[%d]\t=\t%d\n", i, j, _veiculos[i].rotasEmbarque[j]);  // PROBLEMA: INICIANDO VEICULO APENAS LOCALMENTE
+  //   }
+  //   printf("\n");
+  // }
   breakLine(stdout, 2);
-  for (const auto elem : s.requisicaoAtendidaPor) {
-    if (elem < 0 || elem > 100) break;
-    dCount[elem] += 1;
-  }
-  printf("################FOR NORMAL################\n");
-  for (const auto &elem : dCount) {
-    cout << "QTD " << elem.first << ": " << elem.second << "\n";
-  }
-  printf("#####################################\n");
+  // for (const auto elem : s.requisicaoAtendidaPor) {
+  //   if (elem < 0 || elem > 100) break;
+  //   dCount[elem] += 1;
+  // }
+  // printf("################FOR NORMAL################\n");
+  // for (const auto &elem : dCount) {
+  //   cout << "QTD " << elem.first << ": " << elem.second << "\n";
+  // }
+  // printf("#####################################\n");
+  // int distancia = 0;
+  // int rota[MAX][MAX];
+
+  /*
+    SOLUCAO DO PAPER https://www.scielo.br/j/prod/a/Rjp7trrCwDsRRstVGCLJp8y/?lang=pt#
+  */
+
   // breakLine(stdout, 2);
 
   // std::map<int, size_t> cCount;
+  // const int range_from = 0;
+  // const int range_to = veiculos;
+  // std::random_device rand_dev;
+  // std::mt19937 generator(rand_dev());
+  // std::uniform_int_distribution<int> distr(range_from, range_to);
   // for (int i = 0; i < requisicoes; i++) {
   //   s.requisicaoAtendidaPor[i] = distr(generator);
   //   printf("Requisicao %d atendida por: %d\n", i + 1, s.requisicaoAtendidaPor[i]);
