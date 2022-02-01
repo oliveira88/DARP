@@ -107,7 +107,7 @@ void printVetor(std::vector<int> vetor) {
   for (int i = 0; i < vetor.size(); i++) {
     printf("VETOR[%d]\t=\t%d\n", i, vetor[i]);
   }
-  printf("\n\n");
+  printf("\nITERACAO %d\n\n", vetor.size());
 }
 void HCAleatoria(Solucao &s) {
   std::map<int, size_t> dCount;
@@ -119,18 +119,34 @@ void HCAleatoria(Solucao &s) {
   auto rng = std::default_random_engine{};
   std::shuffle(std::begin(arrayLocais), std::end(arrayLocais), rng);
   Veiculo _veiculos[VEICULOS];
-  Veiculo v = Veiculo();
-  int idVeiculo = 0;
-  int a = requisicoes / veiculos;
-  for (int i = 0; i < requisicoes / veiculos; i++) {
-    _veiculos[idVeiculo].id = idVeiculo;
-    _veiculos[idVeiculo].rotasEmbarque[i] = arrayLocais[i];
-
-    printVetor(arrayLocais);
-    idVeiculo++;
-    arrayLocais.erase(arrayLocais.begin() + i);  // Remove do array
+  int retornoInteiro = requisicoes % veiculos == 0;
+  for (int i = 0; i < veiculos; i++) {
+    _veiculos[i].id = i;
+    // printVetor(arrayLocais);
+    for (int j = 0; j < requisicoes / veiculos; j++) {
+      _veiculos[i].rotasEmbarque[j] = arrayLocais[j];
+      _veiculos[i].rotasDesembarque[j] = _veiculos[i].rotasEmbarque[j] + 1;
+      arrayLocais.erase(arrayLocais.begin() + j);  // Remove do array
+    }
     std::shuffle(std::begin(arrayLocais), std::end(arrayLocais), rng);
   }
+  int embarque = 0;
+  int requisicaoAtual = 0;
+  for (int i = 0; i < veiculos; i++) {
+    int distancia = 0;
+    for (int j = 0; j < requisicoes / veiculos; j++) {
+      _veiculos[i].assentosUtilizados += numAssentos[requisicaoAtual];
+      distancia += matrizTempoDeslocamento[embarque][_veiculos[i].rotasEmbarque[j]];
+      embarque = _veiculos[i].rotasEmbarque[j];
+      requisicaoAtual++;
+      printf("VEICULO[%d].EMBARQUE[%d]:\t\t%d\n", i, j, _veiculos[i].rotasEmbarque[j]);
+      printf("VEICULO[%d].DEEMBARQUE[%d]:\t%d\n", i, j, _veiculos[i].rotasDesembarque[j]);
+    }
+    _veiculos[i].distanciaPercorrida = distancia;
+    printf("DISTANCIA: %d\n\n", distancia);
+  }
+  printf("SIZE: %d", arrayLocais.size());
+
   // for (int i = 0; i < veiculos; i++) {
   //   for (int j = 0; j < requisicoes; j++) {
   //     printf("veiculo[%d].rotas[%d]\t=\t%d\n", i, j, _veiculos[i].rotasEmbarque[j]);  // PROBLEMA: INICIANDO VEICULO APENAS LOCALMENTE
