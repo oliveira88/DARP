@@ -5,8 +5,10 @@
 #include <time.h>
 
 #include <algorithm>
+#include <fstream>
 #include <functional>
 #include <iostream>
+#include <iterator>
 #include <map>
 #include <numeric>
 #include <random>
@@ -14,15 +16,17 @@
 #include <vector>
 
 #define LENGTH(x) (sizeof(x) / sizeof(x)[0])
-
+//#define DEBUG
 using namespace std;
 int main() {
   srand(unsigned(time(0)));
   string instancia = "txt\\darp1.txt";
   lerArquivo(instancia);
   Solucao s;
+  // Solucao s2[MAX];
   HCAleatoria(s);
-  // calcularFO(s);
+  calcularFO(s);
+
   // string arquivoSaida = "";
   // escreverDados(arquivoSaida);
   // calcularFO(s);
@@ -116,10 +120,11 @@ void HCAleatoria(Solucao &s) {
     arrayLocais.push_back(1 + 2 * i);  // Posições impares = embarque
   }
 
-  auto rng = std::default_random_engine{};
+  auto rng = std::mt19937{std::random_device{}()};
+
   std::shuffle(std::begin(arrayLocais), std::end(arrayLocais), rng);
-  Veiculo _veiculos[VEICULOS];
-  int retornoInteiro = requisicoes % veiculos == 0;
+  Veiculo _veiculos[MAX_VEICULOS];
+  // memset(_veiculos, 0, sizeof(Veiculo) * MAX);
   for (int i = 0; i < veiculos; i++) {
     _veiculos[i].id = i;
     // printVetor(arrayLocais);
@@ -131,7 +136,9 @@ void HCAleatoria(Solucao &s) {
     std::shuffle(std::begin(arrayLocais), std::end(arrayLocais), rng);
   }
   int embarque = 0;
-  int requisicaoAtual = 0;
+  int desembarque = 999;
+  int requisicaoAtual = 1;
+  // Para cada veiculo faz
   for (int i = 0; i < veiculos; i++) {
     int distancia = 0;
     for (int j = 0; j < requisicoes / veiculos; j++) {
@@ -139,13 +146,24 @@ void HCAleatoria(Solucao &s) {
       distancia += matrizTempoDeslocamento[embarque][_veiculos[i].rotasEmbarque[j]];
       embarque = _veiculos[i].rotasEmbarque[j];
       requisicaoAtual++;
-      printf("VEICULO[%d].EMBARQUE[%d]:\t\t%d\n", i, j, _veiculos[i].rotasEmbarque[j]);
-      printf("VEICULO[%d].DEEMBARQUE[%d]:\t%d\n", i, j, _veiculos[i].rotasDesembarque[j]);
+      // printf("VEICULO[%d].EMBARQUE[%d]:\t\t%d\n", i, j, _veiculos[i].rotasEmbarque[j]);
     }
+    embarque = _veiculos[i].rotasEmbarque[requisicoes / veiculos - 1];
+    desembarque = _veiculos[i].rotasDesembarque[requisicoes / veiculos - 1];
+    distancia += matrizTempoDeslocamento[embarque][desembarque];
     _veiculos[i].distanciaPercorrida = distancia;
-    printf("DISTANCIA: %d\n\n", distancia);
+    // #ifdef DEBUG
+    // printf("VEICULO[%d].assentosUtilizados:\t%d\n", i, _veiculos[i].assentosUtilizados);
+    // printf("DESEMBARQUE NA MAO:\t%d\n", _veiculos[i].rotasEmbarque[requisicoes / veiculos - 1] + 1);
+    // printf("DESEMBARQUE S/ MAO:\t%d\n", _veiculos[i].rotasDesembarque[requisicoes / veiculos - 1]);
+    // printf("Requisição atual:\t%d\n", requisicaoAtual);
+    // printf("DISTANCIA: %d\n\n", distancia);
+    // #endif
   }
+  memcpy(s.veiculos, _veiculos, sizeof(s.veiculos));
+#ifdef DEBUG
   printf("SIZE: %d", arrayLocais.size());
+#endif
 
   // for (int i = 0; i < veiculos; i++) {
   //   for (int j = 0; j < requisicoes; j++) {
@@ -196,18 +214,16 @@ void HCAleatoria(Solucao &s) {
 
 void calcularFO(Solucao &s) {
   int p1 = PESO1 * veiculos;
+  int distancia = 0;
   for (int i = 0; i < veiculos; i++) {
-    s.veiculos[i].FO = s.veiculos[i].distanciaPercorrida;
+    distancia += s.veiculos[i].distanciaPercorrida;
   }
 
-  int p2 = 0;
-  for (int i = 0; i < veiculos; i++) {
-  }
-  // Iterando
-  for (int i = 1; i < requisicoes * 2 + 1; i++) {
-    int embarque = i;
-    int desembarque = i + 1;
-  }
+  int p2 = PESO2 * distancia;
+
+  s.FO = p1 + p2;
+
+  printf("FO: %d\n", s.FO);
 }
 
 void clonarSolucao(Solucao &original, Solucao &copia) {

@@ -2,7 +2,7 @@
 #include <string>
 
 #define MAX 1440
-#define VEICULOS 6
+#define MAX_VEICULOS 6
 
 // Dados de entrada
 int veiculos, requisicoes, duracaoRotaMax, tempoViagemMax, tempoEsperaMax,
@@ -32,7 +32,7 @@ typedef struct Veiculo {
   int tempoEspera = 0;
   int distanciaPercorrida = 0;
   int FO = 0;
-  Violacoes violacoes;
+  // Violacoes violacoes;
   int rotasEmbarque[MAX];
   int rotasDesembarque[MAX];
   // TODO: sequência de locais que formam a rota do veículo.
@@ -43,7 +43,7 @@ typedef struct Solucao {
   // int pessoasTransportadas[MAX];
   // int tempoTotalMovimento[MAX];
   int requisicaoAtendidaPor[MAX];
-  Veiculo veiculos[VEICULOS] = {0};
+  Veiculo veiculos[MAX_VEICULOS] = {0};
   int FO;
 } Solucao;
 
@@ -59,5 +59,5 @@ void HCAleatoriaGulosa(Solucao &s);
 void calcularFO(Solucao &s);
 void clonarSolucao(Solucao &original, Solucao &copia);
 void escreverSolucao(Solucao &s);
-
+void verificaViolacoes(Solucao &s);
 void breakLine(FILE *f, const int num);
