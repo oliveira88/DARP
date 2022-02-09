@@ -32,18 +32,19 @@ typedef struct Veiculo {
   int tempoEspera = 0;
   int distanciaPercorrida = 0;
   int FO = 0;
+  int horarioDeInicio = 0;
+  int horarioDeFim = 0;
+
   Violacoes violacoes;
   int rotasEmbarque[MAX];
   int rotasDesembarque[MAX];
-  // TODO: sequência de locais que formam a rota do veículo.
 } Veiculo;
 
 typedef struct Solucao {
-  // int idVeiculoTransportado[MAX];  // -1= nenhum, 1,2,3,4,5,6
-  // int pessoasTransportadas[MAX];
-  // int tempoTotalMovimento[MAX];
   int requisicaoAtendidaPor[MAX];
   Veiculo veiculos[MAX_VEICULOS] = {0};
+  int horariosEmbarquePPNE[MAX];
+  int horariosDesembarquePPNE[MAX];
   int FO;
   int veiculosUtilizados = 0;
 } Solucao;

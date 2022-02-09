@@ -21,27 +21,39 @@
 //#define DEBUG
 using namespace std;
 int main() {
-  string instancia = "txt\\darp1.txt";
+  clock_t tempoInicial, tempoFinal;
+  tempoInicial = clock();
+  string instancia = "txt\\darp3.txt";
   lerArquivo(instancia);
-  int pior = 0;
-  int melhor = 5000;
   for (int i = 0; i < 1; i++) {
     Solucao s;
     HCAleatoria(s);
     calcularFO(s);
-    escreverSolucao(s, false);
-    if (s.FO < melhor) {
-      melhor = s.FO;
-    }
-    if (s.FO > pior) {
-      pior = s.FO;
-    }
+    escreverSolucao(s, true);
   }
-  // cout << "MELHOR " << melhor << "\n";
-  // cout << "PIOR " << pior << "\n";
-  // string arquivoSaida = "";
-  // escreverDados(arquivoSaida);
-  // calcularFO(s);
+
+  // tempoFinal = clock() - tempoInicial;
+  // double tempoTotal = (double)tempoFinal / CLOCKS_PER_SEC;
+  // printf("Tempo total: %.2f\n\n\n", tempoTotal);
+
+  // tempoInicial = clock();
+  // for (int i = 0; i < 1000; i++) {
+  //   Solucao s;
+  //   HCAleatoria(s);
+  // }
+  // tempoFinal = clock() - tempoInicial;
+  // tempoTotal = (double)tempoFinal / CLOCKS_PER_SEC;
+  // printf("Tempo total: %.2f\n\n\n", tempoTotal);
+
+  // tempoInicial = clock();
+  // for (int i = 0; i < 1000; i++) {
+  //   Solucao s;
+  //   calcularFO(s);
+  // }
+  // tempoFinal = clock() - tempoInicial;
+  // tempoTotal = (double)tempoFinal / CLOCKS_PER_SEC;
+  // printf("Tempo total: %.2f\n\n\n", tempoTotal);
+  // // escreverSolucao(s, false);
 }
 
 void lerArquivo(string nome) {
@@ -167,52 +179,34 @@ void HCAleatoria(Solucao &s) {
     }
     std::shuffle(std::begin(arrayLocais), std::end(arrayLocais), rng);
   }
-#ifdef DEBUG
-  for (int i = 0; i < veiculos; i++) {
-    printf("VEICULO %d\n", i + 1);
-    for (int j = 0; j < _veiculos[i].assentosUtilizados; j++) {
-      printf("EMBARQUE[%d] - DESEMBARQUE[%d]\n", _veiculos[i].rotasEmbarque[j], _veiculos[i].rotasDesembarque[j]);
-    }
-  }
-#endif
   int desembarque = 999;
   // Para cada veiculo faz o embarque
   for (int i = 0; i < veiculos; i++) {
     int embarque = 0;  // Embarque da garagem
     int distanciaTotal = 0;
+    int tempoTotal = inicioJanelaTempo[0];
+    _veiculos[i].horarioDeInicio = tempoTotal;
     _veiculos[i].distanciaPercorrida = 0;
     for (int j = 0; j < _veiculos[i].assentosUtilizados; j++) {
       // PEGA CADA PESSOA EM SEU LOCAL
       int distanciaAtual = matrizTempoDeslocamento[embarque][_veiculos[i].rotasEmbarque[j]];
+      tempoTotal += distanciaAtual;
       distanciaTotal += distanciaAtual;
 
       int horarioAberturaLocal = inicioJanelaTempo[_veiculos[i].rotasEmbarque[j]];
-      int horarioChegada = inicioJanelaTempo[embarque] + distanciaAtual;
+      int horarioChegada = tempoTotal;
       int tempodeEspera = horarioAberturaLocal - horarioChegada;
       if (tempodeEspera > 0) {
         _veiculos[i].tempoEspera += tempodeEspera;
+        tempoTotal += tempodeEspera;
       }
-      // cout << "LOCAL " << _veiculos[i].rotasEmbarque[j] << "\n";
-      // cout << "HORARIO DE ABERTURA GARAGEM: " << inicioJanelaTempo[0] << "\n";
-      // cout << "HORARIO DE ABERTURA LOCAL: " << horarioAberturaLocal << "\n";
-      // cout << "HORARIO DE CHEGADA: " << horarioChegada << "\n";
-      // cout << "DISTANCIA ATUAL: " << distanciaAtual << "\n";
-      // cout << "TEMPO DE ESPERA: " << tempodeEspera << "\n";
-      embarque = _veiculos[i].rotasEmbarque[j];
-      // printf("DISTANCIA no embarque: %d\n\n", distancia);
-      // printf("\n\n");
-    }
-    printf("\n\n");
 
+      s.horariosEmbarquePPNE[_veiculos[i].rotasEmbarque[j]];
+      embarque = _veiculos[i].rotasEmbarque[j];
+    }
     _veiculos[i].distanciaPercorrida += distanciaTotal;
+    _veiculos[i].horarioDeFim = tempoTotal;
     _veiculos[i].duracaoRota += distanciaTotal;
-    // #ifdef DEBUG
-    // printf("VEICULO[%d].assentosUtilizados:\t%d\n", i, _veiculos[i].assentosUtilizados);
-    // printf("DESEMBARQUE NA MAO:\t%d\n", _veiculos[i].rotasEmbarque[_veiculos[i].assentosUtilizados - 1] + 1);
-    // printf("DESEMBARQUE S/ MAO:\t%d\n", _veiculos[i].rotasDesembarque[_veiculos[i].assentosUtilizados - 1] + 1);
-    // printf("Requisição atual:\t%d\n", requisicaoAtual);
-    // printf("DISTANCIA: %d\n\n", distancia);
-    // #endif
   }
 
   // Para cada veiculo faz o desembarque
@@ -231,38 +225,14 @@ void HCAleatoria(Solucao &s) {
       if (tempoViolado < 0) {
         _veiculos[i].violacoes.horarioSaidaEChegadaGaragens += 1;
       }
-      // cout << "LOCAL " << _veiculos[i].rotasEmbarque[j] << "\n";
-      // cout << "HORARIO DE ABERTURA GARAGEM: " << fimJanelaTempo[0] << "\n";
-      // cout << "HORARIO DE FECHAMENTP LOCAL: " << horarioFechamentoLocal << "\n";
-      // cout << "HORARIO DE CHEGADA: " << horarioChegada << "\n";
-      // cout << "DISTANCIA ATUAL: " << distanciaAtual << "\n";
-      // cout << "TEMPO DE ESPERA: " << tempodeEspera << "\n";
+
+      s.horariosDesembarquePPNE[_veiculos[i].rotasDesembarque[j] - requisicoes];
       embarque = _veiculos[i].rotasDesembarque[j];
-      // printf("DISTANCIATotal no desembarque: %d\n\n", distanciaTotal);
-      // cout << "TEMPO DE ESPERA: " << tempodeEspera << "\n";
     }
-    // printf("\n\n");
     distanciaTotal += matrizTempoDeslocamento[embarque][requisicoes * 2 + 1];  // Vai pra garagem
     _veiculos[i].distanciaPercorrida += distanciaTotal;
-    // printf("Veiculo[%d] distancia: %d\n", i + 1, _veiculos[i].distanciaPercorrida);
-    // #ifdef DEBUG
-    // printf("VEICULO[%d].assentosUtilizados:\t%d\n", i, _veiculos[i].assentosUtilizados);
-    // printf("DESEMBARQUE NA MAO:\t%d\n", _veiculos[i].rotasEmbarque[_veiculos[i].assentosUtilizados - 1] + 1);
-    // printf("DESEMBARQUE S/ MAO:\t%d\n", _veiculos[i].rotasDesembarque[_veiculos[i].assentosUtilizados - 1] + 1);
-    // printf("Requisição atual:\t%d\n", requisicaoAtual);
-    // printf("DISTANCIA: %d\n\n", distancia);
-    // #endif
   }
   memcpy(s.veiculos, _veiculos, sizeof(s.veiculos));
-
-  // for (int i = 0; i < veiculos; i++) {
-  //   for (int j = 0; j < requisicoes; j++) {
-  //     printf("veiculo[%d].rotas[%d]\t=\t%d\n", i, j, _veiculos[i].rotasEmbarque[j]);  // PROBLEMA: INICIANDO VEICULO APENAS LOCALMENTE
-  //   }
-  //   printf("\n");
-  // }
-  // breakLine(stdout, 2);
-
   verificaViolacoes(s);
 }
 
@@ -272,12 +242,22 @@ void calcularFO(Solucao &s) {
   for (int i = 0; i < veiculos; i++) {
     distancia += s.veiculos[i].distanciaPercorrida;
   }
-
   int p2 = PESO2 * distancia;
 
-  s.FO = p1 + p2;
+  int horariosVeiculoChega = 0;
+  for (int i = 0; i < veiculos; i++) {
+    horariosVeiculoChega += s.veiculos[i].horarioDeFim - s.veiculos[i].horarioDeInicio;
+  }
+  int p3 = PESO3 * horariosVeiculoChega;
 
-  // printf("FO: %d\n", s.FO);
+  int horarioEmbDesPPNES = 0;
+  for (int i = 0; i < requisicoes; i++) {
+    horarioEmbDesPPNES += s.horariosDesembarquePPNE[i] - s.horariosEmbarquePPNE[i];
+  }
+  int p4 = PESO4 * horarioEmbDesPPNES;
+
+  int p5 = 0;
+  s.FO = p1 + p2 + p3 + p4 + p5;
 }
 
 void clonarSolucao(Solucao &original, Solucao &copia) {
@@ -356,11 +336,9 @@ void verificaViolacoes(Solucao &s) {
     if (s.veiculos[i].assentosUtilizados > capVeiculos[i]) {
       s.veiculos[i].violacoes.numAssentos += 1;
     }
-
     if (s.veiculos[i].tempoViagem > duracaoRotaMax) {
       s.veiculos[i].violacoes.duracaoMaximaRota += 1;
     }
-
     if (s.veiculos[i].assentosUtilizados > capVeiculos[i]) {
       s.veiculos[i].violacoes.numAssentos += 1;
     }
