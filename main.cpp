@@ -366,3 +366,23 @@ void verificaViolacoes(Solucao &s) {
     }
   }
 }
+
+void lerSolucaoQualquer(string nome) {
+  FILE *f = fopen(nome.c_str(), "r");
+  int FO;
+
+  int veiculosUsados;
+  int idVeiculo;
+  int requisicoesAtendidas;
+  int requisicoesAtendidass;
+  int vetorIdLocais[MAX][MAX];
+  fscanf(f, "%d", &FO);
+  fscanf(f, "%d", &veiculosUsados);
+  for (int i = 0; i < veiculosUsados; i++) {
+    fscanf(f, "%d", &idVeiculo);
+    fscanf(f, "%d", &requisicoesAtendidas);
+    for (int j = 0; j < requisicoesAtendidas * 2 + 2; j++) {
+      fscanf(f, "%d", &vetorIdLocais[i][j]);
+    }
+  }
+}

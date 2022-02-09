@@ -62,3 +62,4 @@ void clonarSolucao(Solucao &original, Solucao &copia);
 void escreverSolucao(Solucao &s, const bool flag);
 void verificaViolacoes(Solucao &s);
 void breakLine(FILE *f, const int num);
+void lerSolucaoQualquer(std::string nome);
