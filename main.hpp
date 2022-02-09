@@ -16,11 +16,11 @@ int veiculos, requisicoes, duracaoRotaMax, tempoViagemMax, tempoEsperaMax,
 
 // Estruturas de dados
 typedef struct Violacoes {
-  int numAssentos;
-  int duracaoMaximaRota;
-  int tempoMaximoViagem;
-  int tempoMaximoEspera;
-  int horarioSaidaEChegadaGaragens;
+  int numAssentos = 0;
+  int duracaoMaximaRota = 0;
+  int tempoMaximoViagem = 0;
+  int tempoMaximoEspera = 0;
+  int horarioSaidaEChegadaGaragens = 0;
 } Violacoes;
 
 typedef struct Veiculo {
@@ -32,7 +32,7 @@ typedef struct Veiculo {
   int tempoEspera = 0;
   int distanciaPercorrida = 0;
   int FO = 0;
-  // Violacoes violacoes;
+  Violacoes violacoes;
   int rotasEmbarque[MAX];
   int rotasDesembarque[MAX];
   // TODO: sequência de locais que formam a rota do veículo.
@@ -45,9 +45,10 @@ typedef struct Solucao {
   int requisicaoAtendidaPor[MAX];
   Veiculo veiculos[MAX_VEICULOS] = {0};
   int FO;
+  int veiculosUtilizados = 0;
 } Solucao;
 
-int PESO1 = 10, PESO2 = 1;
+int PESO1 = 10, PESO2 = 1, PESO3 = 0, PESO4 = 0, PESO5 = 0;
 
 int reqVeiculo[MAX];
 
@@ -58,6 +59,6 @@ void HCGulosa(Solucao &s);
 void HCAleatoriaGulosa(Solucao &s);
 void calcularFO(Solucao &s);
 void clonarSolucao(Solucao &original, Solucao &copia);
-void escreverSolucao(Solucao &s);
+void escreverSolucao(Solucao &s, const bool flag);
 void verificaViolacoes(Solucao &s);
 void breakLine(FILE *f, const int num);
