@@ -5,6 +5,7 @@
 #include <time.h>
 
 #include <algorithm>
+#include <cassert>
 #include <fstream>
 #include <functional>
 #include <iostream>
@@ -20,7 +21,7 @@
 using namespace std;
 int main() {
   srand(unsigned(time(0)));
-  string instancia = "txt\\darp1.txt";
+  string instancia = "txt\\darp3.txt";
   lerArquivo(instancia);
   Solucao s;
   // Solucao s2[MAX];
@@ -107,55 +108,99 @@ void simulatedAnnealing() {
 
   fim = clock();
 }
+
 void printVetor(std::vector<int> vetor) {
   for (int i = 0; i < vetor.size(); i++) {
     printf("VETOR[%d]\t=\t%d\n", i, vetor[i]);
   }
-  printf("\nITERACAO %d\n\n", vetor.size());
+  printf("\nTAMANHO VECTOR: %d\n\n", vetor.size());
 }
+
 void HCAleatoria(Solucao &s) {
   std::map<int, size_t> dCount;
   std::vector<int> arrayLocais;  // Array para embaralhar com os locais e distribuir entre os veiculos
-  for (int i = 0; i < requisicoes; i++) {
-    arrayLocais.push_back(1 + 2 * i);  // Posições impares = embarque
-  }
 
+  for (int i = 1; i < requisicoes + 1; i++) {
+    arrayLocais.push_back(i);  // Array Locais com embarques
+  }
   auto rng = std::mt19937{std::random_device{}()};
 
   std::shuffle(std::begin(arrayLocais), std::end(arrayLocais), rng);
   Veiculo _veiculos[MAX_VEICULOS];
-  // memset(_veiculos, 0, sizeof(Veiculo) * MAX);
+
+  int divReqVeiculos = requisicoes / veiculos;
+  int reqRestantes = requisicoes % veiculos;
+  int cont = 0;
+  for (int i = 0; i < veiculos; i++) {
+    _veiculos[i].assentosUtilizados = divReqVeiculos;
+  }
+  int k = 0;
+  while (reqRestantes > 0) {
+    _veiculos[k++].assentosUtilizados++;
+    reqRestantes--;
+  }
+  for (int i = 0; i < veiculos; i++) {
+    cont += _veiculos[i].assentosUtilizados;
+  }
+
   for (int i = 0; i < veiculos; i++) {
     _veiculos[i].id = i;
-    // printVetor(arrayLocais);
-    for (int j = 0; j < requisicoes / veiculos; j++) {
-      _veiculos[i].rotasEmbarque[j] = arrayLocais[j];
-      _veiculos[i].rotasDesembarque[j] = _veiculos[i].rotasEmbarque[j] + 1;
-      arrayLocais.erase(arrayLocais.begin() + j);  // Remove do array
+    for (int j = 0; j < _veiculos[i].assentosUtilizados; j++) {
+      _veiculos[i].rotasEmbarque[j] = arrayLocais[0];
+      _veiculos[i].rotasDesembarque[j] = _veiculos[i].rotasEmbarque[j] + requisicoes;
+      arrayLocais.erase(arrayLocais.begin() + 0);  // Remove do vector
     }
     std::shuffle(std::begin(arrayLocais), std::end(arrayLocais), rng);
   }
-  int embarque = 0;
-  int desembarque = 999;
-  int requisicaoAtual = 1;
-  // Para cada veiculo faz
   for (int i = 0; i < veiculos; i++) {
+    printf("VEICULO %d\n", i + 1);
+    for (int j = 0; j < _veiculos[i].assentosUtilizados; j++) {
+      printf("EMBARQUE[%d] - DESEMBARQUE[%d]\n", _veiculos[i].rotasEmbarque[j], _veiculos[i].rotasDesembarque[j]);
+    }
+  }
+  int desembarque = 999;
+  // Para cada veiculo faz o embarque
+  for (int i = 0; i < veiculos; i++) {
+    int embarque = 0;  // Embarque da garagem
     int distancia = 0;
-    for (int j = 0; j < requisicoes / veiculos; j++) {
-      _veiculos[i].assentosUtilizados += numAssentos[requisicaoAtual];
+    _veiculos[i].distanciaPercorrida = 0;
+    for (int j = 0; j < _veiculos[i].assentosUtilizados; j++) {
+      // PEGA CADA PESSOA EM SEU LOCAL
+      // _veiculos[i].assentosUtilizados += numAssentos[requisicaoAtual];
       distancia += matrizTempoDeslocamento[embarque][_veiculos[i].rotasEmbarque[j]];
       embarque = _veiculos[i].rotasEmbarque[j];
-      requisicaoAtual++;
-      // printf("VEICULO[%d].EMBARQUE[%d]:\t\t%d\n", i, j, _veiculos[i].rotasEmbarque[j]);
+      printf("DISTANCIA no embarque: %d\n\n", distancia);
     }
-    embarque = _veiculos[i].rotasEmbarque[requisicoes / veiculos - 1];
-    desembarque = _veiculos[i].rotasDesembarque[requisicoes / veiculos - 1];
-    distancia += matrizTempoDeslocamento[embarque][desembarque];
-    _veiculos[i].distanciaPercorrida = distancia;
+    printf("\n\n");
+    _veiculos[i].distanciaPercorrida += distancia;
     // #ifdef DEBUG
     // printf("VEICULO[%d].assentosUtilizados:\t%d\n", i, _veiculos[i].assentosUtilizados);
-    // printf("DESEMBARQUE NA MAO:\t%d\n", _veiculos[i].rotasEmbarque[requisicoes / veiculos - 1] + 1);
-    // printf("DESEMBARQUE S/ MAO:\t%d\n", _veiculos[i].rotasDesembarque[requisicoes / veiculos - 1]);
+    // printf("DESEMBARQUE NA MAO:\t%d\n", _veiculos[i].rotasEmbarque[_veiculos[i].assentosUtilizados - 1] + 1);
+    // printf("DESEMBARQUE S/ MAO:\t%d\n", _veiculos[i].rotasDesembarque[_veiculos[i].assentosUtilizados - 1] + 1);
+    // printf("Requisição atual:\t%d\n", requisicaoAtual);
+    // printf("DISTANCIA: %d\n\n", distancia);
+    // #endif
+  }
+
+  // Para cada veiculo faz o desembarque
+  for (int i = 0; i < veiculos; i++) {
+    int embarque = _veiculos[i].rotasEmbarque[_veiculos[i].assentosUtilizados - 1];  // Ultima rota embarcada
+    int cont = 0;
+    int distancia = 0;
+    for (int j = 0; j < _veiculos[i].assentosUtilizados; j++) {
+      // ENTREGA CADA PESSOA EM SEU LOCAL
+      distancia += matrizTempoDeslocamento[embarque][_veiculos[i].rotasDesembarque[j]];
+      embarque = _veiculos[i].rotasDesembarque[j];
+      // printf("DISTANCIA no desembarque: %d\n\n", distancia);
+    }
+    printf("\n\n");
+    distancia += matrizTempoDeslocamento[embarque][requisicoes * 2 + 1];  // Vai pra garagem
+    _veiculos[i].distanciaPercorrida += distancia;
+    printf("Veiculo[%d] distancia: %d\n", i + 1, _veiculos[i].distanciaPercorrida);
+    // #ifdef DEBUG
+    // printf("VEICULO[%d].assentosUtilizados:\t%d\n", i, _veiculos[i].assentosUtilizados);
+    // printf("DESEMBARQUE NA MAO:\t%d\n", _veiculos[i].rotasEmbarque[_veiculos[i].assentosUtilizados - 1] + 1);
+    // printf("DESEMBARQUE S/ MAO:\t%d\n", _veiculos[i].rotasDesembarque[_veiculos[i].assentosUtilizados - 1] + 1);
     // printf("Requisição atual:\t%d\n", requisicaoAtual);
     // printf("DISTANCIA: %d\n\n", distancia);
     // #endif
@@ -172,44 +217,10 @@ void HCAleatoria(Solucao &s) {
   //   printf("\n");
   // }
   breakLine(stdout, 2);
-  // for (const auto elem : s.requisicaoAtendidaPor) {
-  //   if (elem < 0 || elem > 100) break;
-  //   dCount[elem] += 1;
-  // }
-  // printf("################FOR NORMAL################\n");
-  // for (const auto &elem : dCount) {
-  //   cout << "QTD " << elem.first << ": " << elem.second << "\n";
-  // }
-  // printf("#####################################\n");
-  // int distancia = 0;
-  // int rota[MAX][MAX];
 
   /*
     SOLUCAO DO PAPER https://www.scielo.br/j/prod/a/Rjp7trrCwDsRRstVGCLJp8y/?lang=pt#
   */
-
-  // breakLine(stdout, 2);
-
-  // std::map<int, size_t> cCount;
-  // const int range_from = 0;
-  // const int range_to = veiculos;
-  // std::random_device rand_dev;
-  // std::mt19937 generator(rand_dev());
-  // std::uniform_int_distribution<int> distr(range_from, range_to);
-  // for (int i = 0; i < requisicoes; i++) {
-  //   s.requisicaoAtendidaPor[i] = distr(generator);
-  //   printf("Requisicao %d atendida por: %d\n", i + 1, s.requisicaoAtendidaPor[i]);
-  // }
-  // breakLine(stdout, 2);
-  // for (const auto elem : s.requisicaoAtendidaPor) {
-  //   if (elem < 0 || elem > 100) break;
-  //   cCount[elem] += 1;
-  // }
-  // printf("################FOR C++11################\n");
-  // for (const auto &elem : cCount) {
-  //   cout << "QTD " << elem.first << ": " << elem.second << "\n";
-  // }
-  // printf("#####################################\n");
 }
 
 void calcularFO(Solucao &s) {
