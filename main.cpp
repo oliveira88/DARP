@@ -201,7 +201,7 @@ void HCAleatoria(Solucao &s) {
         tempoTotal += tempodeEspera;
       }
 
-      s.horariosEmbarquePPNE[_veiculos[i].rotasEmbarque[j]];
+      s.horariosEmbarquePPNE[_veiculos[i].rotasEmbarque[j]] = tempoTotal;
       embarque = _veiculos[i].rotasEmbarque[j];
     }
     _veiculos[i].distanciaPercorrida += distanciaTotal;
@@ -226,7 +226,7 @@ void HCAleatoria(Solucao &s) {
         _veiculos[i].violacoes.horarioSaidaEChegadaGaragens += 1;
       }
 
-      s.horariosDesembarquePPNE[_veiculos[i].rotasDesembarque[j] - requisicoes];
+      s.horariosDesembarquePPNE[_veiculos[i].rotasDesembarque[j] - requisicoes] = horarioChegada;
       embarque = _veiculos[i].rotasDesembarque[j];
     }
     distanciaTotal += matrizTempoDeslocamento[embarque][requisicoes * 2 + 1];  // Vai pra garagem
