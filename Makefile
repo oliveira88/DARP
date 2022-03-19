@@ -8,4 +8,4 @@ all: $(TARGET)
 $(TARGET): $(OBJ)
 	$(CC) $(CXXFLAGS) -o $(TARGET) $(OBJ)
 clean:
-	rm -rf *.obj *.exe *.pdb *.ilk
+	rm -rf *.obj *.exe *.pdb *.ilk *.o

@@ -5,8 +5,12 @@
 #include <time.h>
 
 #include <algorithm>
+#include <cassert>
+#include <chrono>
+#include <fstream>
 #include <functional>
 #include <iostream>
+#include <iterator>
 #include <map>
 #include <numeric>
 #include <random>
@@ -14,18 +18,42 @@
 #include <vector>
 
 #define LENGTH(x) (sizeof(x) / sizeof(x)[0])
-
+//#define DEBUG
 using namespace std;
 int main() {
-  srand(unsigned(time(0)));
+  clock_t tempoInicial, tempoFinal;
+  tempoInicial = clock();
   string instancia = "txt\\darp3.txt";
   lerArquivo(instancia);
-  Solucao s;
-  HCAleatoria(s);
-  // calcularFO(s);
-  // string arquivoSaida = "";
-  // escreverDados(arquivoSaida);
-  // calcularFO(s);
+  for (int i = 0; i < 1; i++) {
+    Solucao s;
+    HCAleatoria(s);
+    calcularFO(s);
+    escreverSolucao(s, true);
+  }
+
+  // tempoFinal = clock() - tempoInicial;
+  // double tempoTotal = (double)tempoFinal / CLOCKS_PER_SEC;
+  // printf("Tempo total: %.2f\n\n\n", tempoTotal);
+
+  // tempoInicial = clock();
+  // for (int i = 0; i < 1000; i++) {
+  //   Solucao s;
+  //   HCAleatoria(s);
+  // }
+  // tempoFinal = clock() - tempoInicial;
+  // tempoTotal = (double)tempoFinal / CLOCKS_PER_SEC;
+  // printf("Tempo total: %.2f\n\n\n", tempoTotal);
+
+  // tempoInicial = clock();
+  // for (int i = 0; i < 1000; i++) {
+  //   Solucao s;
+  //   calcularFO(s);
+  // }
+  // tempoFinal = clock() - tempoInicial;
+  // tempoTotal = (double)tempoFinal / CLOCKS_PER_SEC;
+  // printf("Tempo total: %.2f\n\n\n", tempoTotal);
+  // // escreverSolucao(s, false);
 }
 
 void lerArquivo(string nome) {
@@ -104,60 +132,132 @@ void simulatedAnnealing() {
   fim = clock();
 }
 
+void printVetor(std::vector<int> vetor) {
+  for (int i = 0; i < vetor.size(); i++) {
+    printf("VETOR[%d]\t=\t%d\n", i, vetor[i]);
+  }
+  printf("\nTAMANHO VECTOR: %d\n\n", vetor.size());
+}
+
 void HCAleatoria(Solucao &s) {
   std::map<int, size_t> dCount;
-  const int range_from = 0;
-  const int range_to = veiculos;
-  std::random_device rand_dev;
-  std::mt19937 generator(rand_dev());
-  std::uniform_int_distribution<int> distr(range_from, range_to);
-  for (int i = 0; i < requisicoes; i++) {
-    s.requisicaoAtendidaPor[i] = (rand() % veiculos) + 1;
-    printf("Requisicao %d atendida por: %d\n", i + 1, s.requisicaoAtendidaPor[i]);
-  }
-  breakLine(stdout, 2);
-  for (const auto elem : s.requisicaoAtendidaPor) {
-    if (elem < 0 || elem > 100) break;
-    dCount[elem] += 1;
-  }
-  printf("################FOR NORMAL################\n");
-  for (const auto &elem : dCount) {
-    cout << "QTD " << elem.first << ": " << elem.second << "\n";
-  }
-  printf("#####################################\n");
-  // breakLine(stdout, 2);
+  std::vector<int> arrayLocais;  // Array para embaralhar com os locais e distribuir entre os veiculos
 
-  // std::map<int, size_t> cCount;
-  // for (int i = 0; i < requisicoes; i++) {
-  //   s.requisicaoAtendidaPor[i] = distr(generator);
-  //   printf("Requisicao %d atendida por: %d\n", i + 1, s.requisicaoAtendidaPor[i]);
-  // }
-  // breakLine(stdout, 2);
-  // for (const auto elem : s.requisicaoAtendidaPor) {
-  //   if (elem < 0 || elem > 100) break;
-  //   cCount[elem] += 1;
-  // }
-  // printf("################FOR C++11################\n");
-  // for (const auto &elem : cCount) {
-  //   cout << "QTD " << elem.first << ": " << elem.second << "\n";
-  // }
-  // printf("#####################################\n");
+  for (int i = 1; i < requisicoes + 1; i++) {
+    arrayLocais.push_back(i);  // Array Locais com embarques
+  }
+  // auto rng = std::mt19937{std::random_device{}()};
+  unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+  std::default_random_engine rng(seed);
+
+  std::shuffle(std::begin(arrayLocais), std::end(arrayLocais), rng);
+  Veiculo _veiculos[MAX_VEICULOS];
+
+  int divReqVeiculos = requisicoes / veiculos;
+  int reqRestantes = requisicoes % veiculos;
+  int cont = 0;
+  for (int i = 0; i < veiculos; i++) {
+    _veiculos[i].assentosUtilizados = divReqVeiculos;
+    s.veiculosUtilizados += 1;
+  }
+  int k = 0;
+  while (reqRestantes > 0) {
+    _veiculos[k++].assentosUtilizados++;
+    reqRestantes--;
+  }
+  for (int i = 0; i < veiculos; i++) {
+    cont += _veiculos[i].assentosUtilizados;
+  }
+
+  for (int i = 0; i < veiculos; i++) {
+    _veiculos[i].id = i;
+    _veiculos[i].requicoesAtendidas += 1;
+    for (int j = 0; j < _veiculos[i].assentosUtilizados; j++) {
+      _veiculos[i].rotasEmbarque[j] = arrayLocais[0];
+      _veiculos[i].rotasDesembarque[j] = _veiculos[i].rotasEmbarque[j] + requisicoes;
+      arrayLocais.erase(arrayLocais.begin() + 0);  // Remove do vector
+    }
+    std::shuffle(std::begin(arrayLocais), std::end(arrayLocais), rng);
+  }
+  int desembarque = 999;
+  // Para cada veiculo faz o embarque
+  for (int i = 0; i < veiculos; i++) {
+    int embarque = 0;  // Embarque da garagem
+    int distanciaTotal = 0;
+    int tempoTotal = inicioJanelaTempo[0];
+    _veiculos[i].horarioDeInicio = tempoTotal;
+    _veiculos[i].distanciaPercorrida = 0;
+    for (int j = 0; j < _veiculos[i].assentosUtilizados; j++) {
+      // PEGA CADA PESSOA EM SEU LOCAL
+      int distanciaAtual = matrizTempoDeslocamento[embarque][_veiculos[i].rotasEmbarque[j]];
+      tempoTotal += distanciaAtual;
+      distanciaTotal += distanciaAtual;
+
+      int horarioAberturaLocal = inicioJanelaTempo[_veiculos[i].rotasEmbarque[j]];
+      int horarioChegada = tempoTotal;
+      int tempodeEspera = horarioAberturaLocal - horarioChegada;
+      if (tempodeEspera > 0) {
+        _veiculos[i].tempoEspera += tempodeEspera;
+        tempoTotal += tempodeEspera;
+      }
+
+      s.horariosEmbarquePPNE[_veiculos[i].rotasEmbarque[j]] = tempoTotal;
+      embarque = _veiculos[i].rotasEmbarque[j];
+    }
+    _veiculos[i].distanciaPercorrida += distanciaTotal;
+    _veiculos[i].horarioDeFim = tempoTotal;
+    _veiculos[i].duracaoRota += distanciaTotal;
+  }
+
+  // Para cada veiculo faz o desembarque
+  for (int i = 0; i < veiculos; i++) {
+    int embarque = _veiculos[i].rotasEmbarque[_veiculos[i].assentosUtilizados - 1];  // Ultima rota embarcada
+    int cont = 0;
+    int distanciaTotal = 0;
+    for (int j = 0; j < _veiculos[i].assentosUtilizados; j++) {
+      // ENTREGA CADA PESSOA EM SEU LOCAL
+      int distanciaAtual = matrizTempoDeslocamento[embarque][_veiculos[i].rotasDesembarque[j]];
+      distanciaTotal += distanciaAtual;
+
+      int horarioFechamentoLocal = fimJanelaTempo[_veiculos[i].rotasDesembarque[j]];
+      int horarioChegada = fimJanelaTempo[embarque] + distanciaAtual;
+      int tempoViolado = horarioFechamentoLocal - horarioChegada;
+      if (tempoViolado < 0) {
+        _veiculos[i].violacoes.horarioSaidaEChegadaGaragens += 1;
+      }
+
+      s.horariosDesembarquePPNE[_veiculos[i].rotasDesembarque[j] - requisicoes] = horarioChegada;
+      embarque = _veiculos[i].rotasDesembarque[j];
+    }
+    distanciaTotal += matrizTempoDeslocamento[embarque][requisicoes * 2 + 1];  // Vai pra garagem
+    _veiculos[i].distanciaPercorrida += distanciaTotal;
+  }
+  memcpy(s.veiculos, _veiculos, sizeof(s.veiculos));
+  verificaViolacoes(s);
 }
 
 void calcularFO(Solucao &s) {
   int p1 = PESO1 * veiculos;
+  int distancia = 0;
   for (int i = 0; i < veiculos; i++) {
-    s.veiculos[i].FO = s.veiculos[i].distanciaPercorrida;
+    distancia += s.veiculos[i].distanciaPercorrida;
   }
+  int p2 = PESO2 * distancia;
 
-  int p2 = 0;
+  int horariosVeiculoChega = 0;
   for (int i = 0; i < veiculos; i++) {
+    horariosVeiculoChega += s.veiculos[i].horarioDeFim - s.veiculos[i].horarioDeInicio;
   }
-  // Iterando
-  for (int i = 1; i < requisicoes * 2 + 1; i++) {
-    int embarque = i;
-    int desembarque = i + 1;
+  int p3 = PESO3 * horariosVeiculoChega;
+
+  int horarioEmbDesPPNES = 0;
+  for (int i = 0; i < requisicoes; i++) {
+    horarioEmbDesPPNES += s.horariosDesembarquePPNE[i] - s.horariosEmbarquePPNE[i];
   }
+  int p4 = PESO4 * horarioEmbDesPPNES;
+
+  int p5 = 0;
+  s.FO = p1 + p2 + p3 + p4 + p5;
 }
 
 void clonarSolucao(Solucao &original, Solucao &copia) {
@@ -166,22 +266,101 @@ void clonarSolucao(Solucao &original, Solucao &copia) {
 
 void escreverSolucao(Solucao &s, const bool flag) {
   printf("FO: %d\n", s.FO);
-  // if (flag) {
-  //   printf("Veiculos usados: %d\n");
-  //   printf("Distancia percorrida: %d\n");
-  //   printf("Duração das rotas: %d\n");
-  //   printf("Tempo total de viagem: %d\n");
-  //   printf("Tempo total de espera: %d\n");
-  //   breakLine(stdout, 3);
-  //   printf("Violações de assentos: %d\n");
-  //   printf("Violações da duração maxima de rotas: %d\n");
-  //   printf("Violações do tempo maximo de espera: %d\n");
-  //   printf("Violações dos horarios de saida e chegada: %d\n");
-  // }
+  if (flag) {
+    printf("Veiculos usados: %d\n\n", s.veiculosUtilizados);
+    for (int i = 0; i < veiculos; i++) {
+      printf("Distancia percorrida pelo veiculo[%d]: %d\n", i + 1, s.veiculos[i].distanciaPercorrida);
+    }
+    printf("\n");
+    for (int i = 0; i < veiculos; i++) {
+      printf("Num. de requisicoes atendidas pelo veiculo[%d]: %d\n", i + 1, s.veiculos[i].requicoesAtendidas);
+    }
+    printf("\n");
+    for (int i = 0; i < veiculos; i++) {
+      printf("Assentos utilizados pelo veiculo[%d]: %d\n", i + 1, s.veiculos[i].assentosUtilizados);
+    }
+    printf("\n");
+    for (int i = 0; i < veiculos; i++) {
+      printf("Duracao da rota do veiculo[%d]: %d\n", i + 1, s.veiculos[i].duracaoRota);
+    }
+    printf("\n");
+    for (int i = 0; i < veiculos; i++) {
+      printf("Tempo de espera do veiculo[%d]: %d\n", i + 1, s.veiculos[i].tempoEspera);
+    }
+    printf("\n");
+    // for(int i = 0; i < veiculos; i ++) {
+    //   printf("Tempo de espera do veiculo[%d]: %d\n", i+1, s.veiculos[i].tempoViagem);
+    // }
+    breakLine(stdout, 3);
+    printf("\t---VIOLACOES---\n");
+    int violacoesAssentosTotal = 0;
+    int violacoesDurMaxTotal = 0;
+    int violacoesHRSaidaeChegadaTotal = 0;
+    int violacoesTempoMaximoEsperaTotal = 0;
+    for (int i = 0; i < veiculos; i++) {
+      violacoesAssentosTotal += s.veiculos[i].violacoes.numAssentos;
+      violacoesDurMaxTotal += s.veiculos[i].violacoes.duracaoMaximaRota;
+      violacoesTempoMaximoEsperaTotal += s.veiculos[i].violacoes.tempoMaximoEspera;
+      violacoesHRSaidaeChegadaTotal += s.veiculos[i].violacoes.horarioSaidaEChegadaGaragens;
+    }
+    printf("Violações de assentos: %d\n", violacoesAssentosTotal);
+    printf("Violações da duração maxima de rotas: %d\n", violacoesDurMaxTotal);
+    printf("Violações do tempo maximo de espera: %d\n", violacoesTempoMaximoEsperaTotal);
+    printf("Violações dos horarios de saida e chegada: %d\n", violacoesHRSaidaeChegadaTotal);
+
+    printf("\n\n");
+
+    printf("Sequencia com a rota do veiculo: \n");
+    for (int i = 0; i < veiculos; i++) {
+      printf("0 ");
+      for (int j = 0; j < s.veiculos[i].assentosUtilizados; j++) {
+        printf("%d ", s.veiculos[i].rotasEmbarque[j]);
+      }
+      for (int j = 0; j < s.veiculos[i].assentosUtilizados; j++) {
+        printf("%d ", s.veiculos[i].rotasDesembarque[j]);
+      }
+      printf("%d", requisicoes * 2 + 1);
+      printf("\n");
+    }
+  }
 }
 
 void breakLine(FILE *f, const int num) {
   for (int i = 0; i < num; i++) {
     fprintf(f, "\n");
+  }
+}
+
+void verificaViolacoes(Solucao &s) {
+  for (int i = 0; i < veiculos; i++) {
+    if (s.veiculos[i].assentosUtilizados > capVeiculos[i]) {
+      s.veiculos[i].violacoes.numAssentos += 1;
+    }
+    if (s.veiculos[i].tempoViagem > duracaoRotaMax) {
+      s.veiculos[i].violacoes.duracaoMaximaRota += 1;
+    }
+    if (s.veiculos[i].assentosUtilizados > capVeiculos[i]) {
+      s.veiculos[i].violacoes.numAssentos += 1;
+    }
+  }
+}
+
+void lerSolucaoQualquer(string nome) {
+  FILE *f = fopen(nome.c_str(), "r");
+  int FO;
+
+  int veiculosUsados;
+  int idVeiculo;
+  int requisicoesAtendidas;
+  int requisicoesAtendidass;
+  int vetorIdLocais[MAX][MAX];
+  fscanf(f, "%d", &FO);
+  fscanf(f, "%d", &veiculosUsados);
+  for (int i = 0; i < veiculosUsados; i++) {
+    fscanf(f, "%d", &idVeiculo);
+    fscanf(f, "%d", &requisicoesAtendidas);
+    for (int j = 0; j < requisicoesAtendidas * 2 + 2; j++) {
+      fscanf(f, "%d", &vetorIdLocais[i][j]);
+    }
   }
 }
