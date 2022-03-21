@@ -76,5 +76,6 @@ void simulated_annealing(const double alfa, const int sa_max,
                          const double tempo_max, Solucao &s,
                          double &tempo_melhor, double &tempo_total);
 void gerar_vizinha(Solucao &s);
-
+void escreve(Solucao &s);
+void removeItemArrayByIndex(int *array, int index, int length);
 #endif

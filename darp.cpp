@@ -1,5 +1,6 @@
 #include "darp.hpp"
 
+#include <assert.h>
 #include <math.h>
 #include <memory.h>
 #include <time.h>
@@ -7,7 +8,8 @@
 #include <iostream>
 
 #define MAX(X, Y) ((X > Y) ? X : Y)
-
+#define DBG
+#define LENGTH(x) (sizeof(x) / sizeof(x)[0])
 // pesos para os termos da FO
 const int peso_vei = 10;
 const int peso_dst = 1;
@@ -24,24 +26,34 @@ const int peso_vio_tem_esp = 100;
 
 using namespace std;
 
-int main(int argc, char *argv[]) {
+int main() {
   Solucao sol;
-  string instancia = "txt\\darp1.txt";
+  double alfa = 0.975;
+  int sa_max = 2;
+  double t_0 = 1000;
+  double t_c = 0.01;
+  double tempo_limite = 60;
+  double tempo_melhor, tempo_total;
+  string instancia = "txt\\darp3.txt";
   string saida = "saida.txt";  // "" para mostrar na tela
   lerDados(instancia);
   // testarDados("");
   ordenarLocais();
   // for (int i = 0; i < numLoc - 2; i++)
   //    printf("%d\n", vetLocOrd[i]);
-  heuConGul(sol);
-  calcFO(sol);
-  escArquivo(sol, saida);
-  escProblema(saida);
-  escSolucao(sol, saida);
+  // heuConGul(sol);
+  // calcFO(sol);
+  simulated_annealing(alfa, sa_max * (numLoc + numVei), t_0, t_c, tempo_limite, sol, tempo_melhor, tempo_total);
+  printf("%d", sol.funObj);
+  // escArquivo(sol, saida);
+  // escProblema(saida);
+  // escSolucao(sol, saida);
+  // escreve(sol);
   return 0;
 }
 
 void calcFO(Solucao &s) {
+  int cont = 0;
   int orig, dest, carga;
   // FO
   s.numVeiUsa = 0;
@@ -74,7 +86,9 @@ void calcFO(Solucao &s) {
       orig = dest;
       // locais intermediários
       for (int j = 1; j < s.vetQtdLocAte[i]; j++) {
+        cont++;
         dest = s.matAteVei[i][j];
+        printf("%d ", dest);
         s.vetDstPerVei[i] += matTemDesLoc[orig][dest];
         s.vetHorCheLoc[dest] = s.vetHorSaiLoc[orig] + matTemDesLoc[orig][dest];
         s.vetHorIniAte[dest] = MAX(s.vetHorCheLoc[dest], vetIniJTLoc[dest]);
@@ -85,6 +99,8 @@ void calcFO(Solucao &s) {
         s.vetVioCapVei[i] += MAX(0, carga - vetCapVei[i]);
         orig = dest;
       }
+      printf("\nTOTAL: %d\n", cont);
+      cont = 0;
       // chegada na garagem
       dest = numLoc - 1;
       carga += vetQtdAssLoc[dest];
@@ -344,6 +360,7 @@ void testarDados(string arq) {
       fprintf(f, "%d\t", matTemDesLoc[i][j]);
     fprintf(f, "\n");
   }
+
   if (arq != "")
     fclose(f);
 }
@@ -369,8 +386,10 @@ void lerDados(string arq) {
 }
 
 //-------------------------------------------------
-void simulated_annealing(const double alfa, const int sa_max, const double temp_ini, const double temp_con,
-                         const double tempo_max, Solucao &s, double &tempo_melhor, double &tempo_total) {
+void simulated_annealing(const double alfa, const int sa_max,
+                         const double temp_ini, const double temp_con,
+                         const double tempo_max, Solucao &s,
+                         double &tempo_melhor, double &tempo_total) {
   clock_t hI, hF;
   Solucao s_atual, s_vizinha;
   double temp, delta, x;
@@ -390,7 +409,7 @@ void simulated_annealing(const double alfa, const int sa_max, const double temp_
     while (temp > temp_con) {
       for (int i = 0; i < sa_max; i++) {
         memcpy(&s_vizinha, &s_atual, sizeof(s_atual));
-        // gerar_vizinha(s_vizinha);
+        gerar_vizinha(s_vizinha);
         delta = s_vizinha.funObj - s_atual.funObj;
         if (delta < 0) {
           memcpy(&s_atual, &s_vizinha, sizeof(s_vizinha));
@@ -419,5 +438,61 @@ void simulated_annealing(const double alfa, const int sa_max, const double temp_
 }
 
 void gerar_vizinha(Solucao &s) {
+  // srand(time(NULL));
+  int veiculo1 = rand() % numVei;
+  int veiculo2 = rand() % numVei;
+  int localEmbarqueAleatorio;
+  int localDesembarqueAleatorio;
+  int lugarEmbarque;
+  int lugarDesembarque;
+  while (veiculo1 == veiculo2) {
+    veiculo2 = rand() % numVei;
+  }
+  do {
+    localEmbarqueAleatorio = rand() % s.vetQtdLocAte[veiculo1];
+    lugarEmbarque = s.matAteVei[veiculo1][localEmbarqueAleatorio];
+  } while (lugarEmbarque > numReq);  // garantir que escolha um lugar de embarque
+
+  for (int j = 0; s.vetQtdLocAte[veiculo1]; j++) {
+    if (lugarEmbarque + numReq == s.matAteVei[veiculo1][j]) {
+      lugarDesembarque = s.matAteVei[veiculo1][j];
+      localDesembarqueAleatorio = j;
+      break;
+    }
+  }
+  // __debugbreak();
+  // printf("\nANTES DE REMOVER TAMANHO V1: %d", s.vetQtdLocAte[veiculo1]);
+  removeItemArrayByIndex(s.matAteVei[veiculo1], localEmbarqueAleatorio, LENGTH(s.matAteVei[veiculo1]));
+  removeItemArrayByIndex(s.matAteVei[veiculo1], localDesembarqueAleatorio - 1, LENGTH(s.matAteVei[veiculo1]));
+  // __debugbreak();
+  s.vetQtdLocAte[veiculo1] -= 2;
+  // printf("\nDEPOIS DE REMOVER TAMANHO V1: %d", s.vetQtdLocAte[veiculo1]);
+
+  // printf("\nANTES DE ADICONAR TAMANHO V2: %d", s.vetQtdLocAte[veiculo2]);
+  int ultimaPosicaoVeiculo2 = s.vetQtdLocAte[veiculo2] - 1;
+  s.matAteVei[veiculo2][ultimaPosicaoVeiculo2] = lugarEmbarque;
+  s.vetQtdLocAte[veiculo2]++;
+  ultimaPosicaoVeiculo2 = s.vetQtdLocAte[veiculo2] - 1;
+  s.matAteVei[veiculo2][ultimaPosicaoVeiculo2] = lugarDesembarque;
+  s.vetQtdLocAte[veiculo2]++;
+  // printf("\nDEPOIS DE ADICONAR TAMANHO V2: %d", s.vetQtdLocAte[veiculo2]);
+
   calcFO(s);
+}
+
+void escreve(Solucao &s) {
+  for (int i = 0; i < numVei; i++) {
+    printf("Carro %d:\n", i + 1);
+    for (int j = 0; j < s.vetQtdLocAte[i]; j++) {
+      if (s.matAteVei[i][j] > 0 && s.matAteVei[i][j] < 200)
+        printf("%d ", s.matAteVei[i][j]);
+    }
+    printf("\n\n");
+  }
+}
+
+void removeItemArrayByIndex(int *array, int index, int length) {
+  for (int i = index; i < length; i++) {
+    array[i] = array[i + 1];
+  }
 }
